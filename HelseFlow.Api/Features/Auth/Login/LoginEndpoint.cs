@@ -1,8 +1,9 @@
 using FastEndpoints;
-using HelseFlow_Backend.Api.Features.Auth.Login;
+using HelseFlow_Backend.Api.Features.Auth.Login; // Corrected namespace
 using HelseFlow_Backend.Application.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace HelseFlow_Backend.HelseFlow.Api.Features.Auth.Login;
+namespace HelseFlow_Backend.Api.Features.Auth.Login;
 
 public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
 {
@@ -17,6 +18,7 @@ public class LoginEndpoint : Endpoint<LoginRequest, LoginResponse>
     {
         Post("/api/auth/login");
         AllowAnonymous(); // This endpoint does not require authentication
+        Tags("Auth"); // Group this endpoint under the "Auth" tag
         Summary(s =>
         {
             s.Summary = "Authenticates a user and returns a JWT token and user details.";

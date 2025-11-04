@@ -14,10 +14,16 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <!-- Updated JWT related packages to address warnings -->
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.0.3" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.0.3" />
+
+        <!-- EF Core Packages -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" />
     </ItemGroup>
 
 </Project>

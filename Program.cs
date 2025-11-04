@@ -5,18 +5,23 @@ using HelseFlow_Backend.Application.Services;
 using HelseFlow_Backend.Infrastructure.Data;
 using HelseFlow_Backend.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection; // Added this using directive
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add DbContext
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add FastEndpoints
 builder.Services.AddFastEndpoints();
 
-// Add Swagger for FastEndpoints
-builder.Services.AddFastEndpoints()
-    .SwaggerDocument();
+// Add Swagger for FastEndpoints with custom configuration
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Configure JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -48,34 +53,50 @@ builder.Services.AddAuthorization();
 
 // Register dependencies
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddScoped<AuthService>();
 
-builder.Services.AddSingleton<IVitalLogRepository, InMemoryVitalLogRepository>();
-builder.Services.AddSingleton<IDoctorRepository, InMemoryDoctorRepository>();
-builder.Services.AddSingleton<IAppointmentRepository, InMemoryAppointmentRepository>();
+// Register Repositories (we will replace the rest soon)
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+// builder.Services.AddScoped<IVitalLogRepository, VitalLogRepository>(); // To be added
+// builder.Services.AddScoped<IDoctorRepository, DoctorRepository>(); // To be added
+// builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>(); // To be added
+// builder.Services.AddScoped<IGuidelineRepository, GuidelineRepository>(); // To be added
+
 builder.Services.AddScoped<PatientService>();
 builder.Services.AddScoped<AdminService>();
-
-builder.Services.AddSingleton<IGuidelineRepository, InMemoryGuidelineRepository>();
 builder.Services.AddScoped<GuidelineService>();
-
 builder.Services.AddScoped<AiService>();
+
+// Register Data Seeding services
+builder.Services.AddScoped<DataFactory>();
+builder.Services.AddScoped<DataSeeder>();
 
 // Register HttpClient for OpenWeatherMapService
 builder.Services.AddHttpClient<IWeatherService, OpenWeatherMapService>();
 
 var app = builder.Build();
 
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+    await seeder.SeedAsync();
+}
+
+// Configure authentication and authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Configure FastEndpoints
 app.UseFastEndpoints();
 
 // Configure Swagger UI
-app.UseSwaggerGen();
-
-// Use authentication and authorization
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseOpenApi(); // Generates swagger.json
+app.UseSwaggerUI(c => 
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "HelseFlow API v1");
+    c.DocumentTitle = "HelseFlow API";
+});
 
 app.Run();
